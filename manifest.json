@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "LaTeX Format Converter",
+  "version": "1.0",
+  "description": "Convert LaTeX math symbols from \\( and \\[ to $ and $$ format",
+  "permissions": [
+    "clipboardRead",
+    "clipboardWrite",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://chat.deepseek.com/*",
+    "*://chat.openai.com/*"
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://chat.deepseek.com/*",
+        "*://chat.openai.com/*"
+      ],
+      "js": ["content.js"],
+      "all_frames": true
+    }
+  ]
+} 
