@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "LaTeX Format Converter",
+  "name": "Math LaTeX Converter",
   "version": "1.0",
-  "description": "Convert LaTeX math symbols from \\( and \\[ to $ and $$ format",
+  "description": "Convert LaTeX math symbols from \\( and \\[ to $ and $$ format for Markdown compatibility",
   "permissions": [
     "clipboardRead",
     "clipboardWrite",
@@ -10,7 +10,6 @@
   ],
   "host_permissions": [
     "*://chat.deepseek.com/*",
-    "*://chat.openai.com/*",
     "*://grok.com/*"
   ],
   "content_security_policy": {
@@ -26,7 +25,6 @@
     {
       "matches": [
         "*://chat.deepseek.com/*",
-        "*://chat.openai.com/*",
         "*://grok.com/*"
       ],
       "js": ["content.js"],

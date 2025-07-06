@@ -2,21 +2,84 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>My Chrome Extension</title>
+  <title>Math LaTeX Converter</title>
   <style>
     body {
-      width: 300px;
+      width: 320px;
+      padding: 15px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+    }
+    h2 {
+      color: #2c3e50;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .status {
+      background-color: #e8f5e8;
+      border: 1px solid #4caf50;
+      border-radius: 4px;
       padding: 10px;
+      margin-bottom: 15px;
+      color: #2e7d32;
+    }
+    .info {
+      background-color: #f0f8ff;
+      border: 1px solid #2196f3;
+      border-radius: 4px;
+      padding: 10px;
+      margin-bottom: 15px;
+      color: #1565c0;
+      font-size: 13px;
+    }
+    .supported-sites {
+      margin-top: 10px;
+    }
+    .site {
+      display: inline-block;
+      background-color: #f5f5f5;
+      padding: 4px 8px;
+      margin: 2px;
+      border-radius: 3px;
+      font-size: 12px;
+      color: #666;
     }
     button {
-      margin: 5px;
-      padding: 5px 10px;
+      background-color: #2196f3;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #1976d2;
     }
   </style>
 </head>
 <body>
-  <h2>My Chrome Extension</h2>
-  <button id="actionButton">Click Me</button>
+  <h2>🎯 Math LaTeX Converter</h2>
+  
+  <div class="status">
+    ✅ 扩展已激活
+  </div>
+  
+  <div class="info">
+    <strong>功能说明：</strong><br>
+    自动将 \( \) 和 \[ \] 格式转换为 $ $ 和 $$ $$ 格式，适用于 Obsidian 等 Markdown 编辑器。
+  </div>
+  
+  <div class="supported-sites">
+    <strong>支持的网站：</strong><br>
+    <div class="site">DeepSeek Chat</div>
+    <div class="site">Grok</div>
+  </div>
+  
+  <button id="actionButton">测试转换功能</button>
+  
   <script src="popup.js"></script>
 </body>
 </html> 
