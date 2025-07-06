@@ -1,6 +1,154 @@
 // 这个脚本会在匹配的网页中执行
 console.log('Content script loaded');
 
+// Grok网站专用的调试和监听函数
+function setupGrokDebugListeners() {
+    console.log('Setting up Grok debug listeners...');
+    
+    // 监听所有点击事件，输出详细信息
+    document.addEventListener('click', function(e) {
+        const target = e.target;
+        
+        // 检查是否在Grok网站
+        if (window.location.hostname.includes('grok.com')) {
+            console.log('=== GROK DEBUG: Click Event ===');
+            console.log('Clicked element:', target);
+            console.log('Element tag:', target.tagName);
+            console.log('Element class:', target.className);
+            console.log('Element id:', target.id);
+            console.log('Element text content:', target.textContent?.substring(0, 100));
+            console.log('Element innerHTML:', target.innerHTML?.substring(0, 200));
+            console.log('Element attributes:', Array.from(target.attributes).map(attr => `${attr.name}="${attr.value}"`).join(', '));
+            
+            // 检查父元素链
+            let parent = target.parentElement;
+            let level = 1;
+            while (parent && level <= 5) {
+                console.log(`Parent level ${level}:`, parent.tagName, parent.className, parent.id);
+                console.log(`Parent level ${level} attributes:`, Array.from(parent.attributes).map(attr => `${attr.name}="${attr.value}"`).join(', '));
+                parent = parent.parentElement;
+                level++;
+            }
+            
+            // 检查是否有data-*属性
+            const dataAttrs = Array.from(target.attributes).filter(attr => attr.name.startsWith('data-'));
+            if (dataAttrs.length > 0) {
+                console.log('Data attributes:', dataAttrs.map(attr => `${attr.name}="${attr.value}"`).join(', '));
+            }
+            
+            // 检查是否有aria-*属性
+            const ariaAttrs = Array.from(target.attributes).filter(attr => attr.name.startsWith('aria-'));
+            if (ariaAttrs.length > 0) {
+                console.log('Aria attributes:', ariaAttrs.map(attr => `${attr.name}="${attr.value}"`).join(', '));
+            }
+            
+            // 检查是否包含复制相关的文本 - 修复className错误
+            const copyKeywords = ['copy', '复制', '复制代码', '复制文本', '复制内容'];
+            const targetClassName = typeof target.className === 'string' ? target.className : 
+                                  (target.className?.baseVal || '');
+            const hasCopyKeyword = copyKeywords.some(keyword => 
+                target.textContent?.toLowerCase().includes(keyword.toLowerCase()) ||
+                targetClassName.toLowerCase().includes(keyword.toLowerCase()) ||
+                target.id?.toLowerCase().includes(keyword.toLowerCase())
+            );
+            
+            if (hasCopyKeyword) {
+                console.log('*** POTENTIAL COPY BUTTON DETECTED ***');
+                console.log('Contains copy-related keyword');
+            }
+            
+            // 检查是否是按钮或可点击元素
+            const clickableSelectors = ['button', '[role="button"]', '[tabindex]', 'a', 'input[type="button"]', 'input[type="submit"]'];
+            const isClickable = clickableSelectors.some(selector => target.matches(selector));
+            if (isClickable) {
+                console.log('*** CLICKABLE ELEMENT DETECTED ***');
+                console.log('Element is clickable');
+            }
+            
+            console.log('=== END GROK DEBUG ===');
+        }
+    }, true); // 使用捕获阶段
+    
+    // 监听DOM变化，特别关注新添加的元素
+    const grokObserver = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+            if (mutation.addedNodes.length && window.location.hostname.includes('grok.com')) {
+                console.log('=== GROK DEBUG: DOM Mutation ===');
+                console.log('Added nodes count:', mutation.addedNodes.length);
+                
+                mutation.addedNodes.forEach((node, index) => {
+                    if (node.nodeType === 1) { // 元素节点
+                        console.log(`New element ${index}:`, node.tagName, node.className, node.id);
+                        console.log(`New element ${index} attributes:`, Array.from(node.attributes).map(attr => `${attr.name}="${attr.value}"`).join(', '));
+                        
+                        // 检查是否包含复制相关的关键词 - 修复className错误
+                        const copyKeywords = ['copy', '复制', '复制代码', '复制文本', '复制内容'];
+                        const nodeClassName = typeof node.className === 'string' ? node.className : 
+                                            (node.className?.baseVal || '');
+                        const hasCopyKeyword = copyKeywords.some(keyword => 
+                            node.textContent?.toLowerCase().includes(keyword.toLowerCase()) ||
+                            nodeClassName.toLowerCase().includes(keyword.toLowerCase()) ||
+                            node.id?.toLowerCase().includes(keyword.toLowerCase())
+                        );
+                        
+                        if (hasCopyKeyword) {
+                            console.log(`*** NEW ELEMENT ${index} CONTAINS COPY KEYWORD ***`);
+                        }
+                        
+                        // 查找SVG图标
+                        const svgs = node.querySelectorAll('svg');
+                        if (svgs.length > 0) {
+                            console.log(`New element ${index} contains ${svgs.length} SVG(s)`);
+                            svgs.forEach((svg, svgIndex) => {
+                                console.log(`SVG ${svgIndex}:`, svg.outerHTML.substring(0, 200));
+                            });
+                        }
+                    }
+                });
+                
+                console.log('=== END GROK DEBUG ===');
+            }
+        });
+    });
+    
+    // 开始观察DOM变化
+    grokObserver.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['class', 'id', 'style', 'data-*', 'aria-*']
+    });
+    
+    // 监听键盘事件，特别是Ctrl+C
+    document.addEventListener('keydown', function(e) {
+        if (window.location.hostname.includes('grok.com') && (e.ctrlKey || e.metaKey) && e.key === 'c') {
+            console.log('=== GROK DEBUG: Copy Keyboard Shortcut ===');
+            console.log('Ctrl+C pressed');
+            console.log('Active element:', document.activeElement);
+            console.log('Selected text:', window.getSelection().toString());
+            console.log('=== END GROK DEBUG ===');
+        }
+    });
+    
+    // 监听剪贴板事件
+    document.addEventListener('copy', function(e) {
+        if (window.location.hostname.includes('grok.com')) {
+            console.log('=== GROK DEBUG: Copy Event ===');
+            console.log('Copy event triggered');
+            console.log('Target:', e.target);
+            console.log('Selection:', window.getSelection().toString());
+            console.log('=== END GROK DEBUG ===');
+        }
+    });
+}
+
+// 在页面加载完成后设置Grok调试监听器
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupGrokDebugListeners);
+} else {
+    setupGrokDebugListeners();
+}
+
 // 这里可以添加与网页交互的代码 
 
 // 监听复制按钮的点击事件
@@ -77,6 +225,60 @@ function isCopyButton(element) {
                 }
             }
         }
+        
+        // Grok网站的复制按钮识别
+        if (window.location.hostname.includes('grok.com')) {
+            return isGrokCopyButton(element);
+        }
+    }
+    
+    return false;
+}
+
+// Grok网站专用的复制按钮识别函数
+function isGrokCopyButton(element) {
+    // 检查是否是SVG元素
+    if (element.tagName !== 'svg') {
+        return false;
+    }
+    
+    // 检查SVG的基本属性
+    const viewBox = element.getAttribute('viewBox');
+    const width = element.getAttribute('width');
+    const height = element.getAttribute('height');
+    
+    // Grok的复制按钮SVG特征：16x16, viewBox="0 0 24 24"
+    if (viewBox === '0 0 24 24' && width === '16' && height === '16') {
+        // 检查父元素是否是BUTTON且有aria-label="复制"
+        let parent = element.parentElement;
+        while (parent) {
+            if (parent.tagName === 'BUTTON') {
+                const ariaLabel = parent.getAttribute('aria-label');
+                if (ariaLabel === '复制') {
+                    console.log('Found Grok copy button!');
+                    return true;
+                }
+                break;
+            }
+            parent = parent.parentElement;
+        }
+        
+        // 检查SVG内容是否包含复制图标的特征
+        const rect = element.querySelector('rect');
+        const path = element.querySelector('path');
+        
+        if (rect && path) {
+            const rectX = rect.getAttribute('x');
+            const rectY = rect.getAttribute('y');
+            const rectWidth = rect.getAttribute('width');
+            const rectHeight = rect.getAttribute('height');
+            
+            // 检查是否是复制图标的矩形部分
+            if (rectX === '3' && rectY === '8' && rectWidth === '13' && rectHeight === '13') {
+                console.log('Found Grok copy button by SVG content!');
+                return true;
+            }
+        }
     }
     
     return false;
@@ -108,20 +310,38 @@ function setupIframeListeners() {
 // 监听复制按钮的点击事件
 document.addEventListener('click', function(e) {
     const target = e.target;
-    console.log('Clicked element:', target);
-    console.log('Element tag:', target.tagName);
-    console.log('Element class:', target.className);
-    console.log('Element id:', target.id);
-    console.log('Element attributes:', Array.from(target.attributes).map(attr => `${attr.name}="${attr.value}"`).join(', '));
+    
+    // 在Grok网站上，减少调试输出，只保留关键信息
+    if (window.location.hostname.includes('grok.com')) {
+        console.log('Grok click detected on:', target.tagName, target.className);
+    } else {
+        console.log('Clicked element:', target);
+        console.log('Element tag:', target.tagName);
+        console.log('Element class:', target.className);
+        console.log('Element id:', target.id);
+        console.log('Element attributes:', Array.from(target.attributes).map(attr => `${attr.name}="${attr.value}"`).join(', '));
+    }
     
     // 检查父元素
     let parent = target.parentElement;
     while (parent) {
-        console.log('Parent element:', parent.tagName, parent.className);
-        if (isCopyButton(parent)) {
-            console.log('Copy button detected in parent!');
-            handleCopyButtonClick(e);
-            return;
+        if (window.location.hostname.includes('grok.com')) {
+            // 在Grok网站上，检查父元素是否是复制按钮
+            if (parent.tagName === 'BUTTON') {
+                const ariaLabel = parent.getAttribute('aria-label');
+                if (ariaLabel === '复制') {
+                    console.log('Grok copy button detected in parent!');
+                    handleCopyButtonClick(e);
+                    return;
+                }
+            }
+        } else {
+            console.log('Parent element:', parent.tagName, parent.className);
+            if (isCopyButton(parent)) {
+                console.log('Copy button detected in parent!');
+                handleCopyButtonClick(e);
+                return;
+            }
         }
         parent = parent.parentElement;
     }
@@ -130,7 +350,9 @@ document.addEventListener('click', function(e) {
         console.log('Copy button detected!');
         handleCopyButtonClick(e);
     } else {
-        console.log('Not a copy button');
+        if (!window.location.hostname.includes('grok.com')) {
+            console.log('Not a copy button');
+        }
     }
 });
 

@@ -10,7 +10,8 @@
   ],
   "host_permissions": [
     "*://chat.deepseek.com/*",
-    "*://chat.openai.com/*"
+    "*://chat.openai.com/*",
+    "*://grok.com/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"
@@ -25,7 +26,8 @@
     {
       "matches": [
         "*://chat.deepseek.com/*",
-        "*://chat.openai.com/*"
+        "*://chat.openai.com/*",
+        "*://grok.com/*"
       ],
       "js": ["content.js"],
       "all_frames": true
